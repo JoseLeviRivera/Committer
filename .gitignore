@@ -1,0 +1,36 @@
+# Entorno virtual
+venv/
+.venv/
+env/
+.env/
+
+# Archivos de compilación y temporales
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.sqlite3
+
+# Archivos de configuración del IDE
+.vscode/
+.idea/
+
+# Archivos de logs
+*.log
+
+# Archivos de tests
+test_*.py
+*_test.py
+
+# Archivos específicos de Python
+*.egg
+*.egg-info
+dist/
+build/
+*.manifest
+*.spec
+
+# Entornos de Docker
+docker-compose.override.yml
+.docker/
