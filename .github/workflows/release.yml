@@ -6,8 +6,10 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  # Job to build the Linux executable
+  build-linux:
+    runs-on: ubuntu-latest  # Use Ubuntu for building the Linux executable
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -15,7 +17,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10.7'  # Ensure it's a 64-bit version, but by default, recent Python versions are 64-bit.
+          python-version: '3.10'
 
       - name: Install dependencies
         run: |
@@ -26,23 +28,64 @@ jobs:
         id: set_tag
         run: echo "TAG_NAME=v$(date +'%Y%m%d-%H%M')" >> $GITHUB_ENV
 
-      - name: Build executables
+      - name: Build Linux executable
         run: |
-          # Run PyInstaller to build both executables with 64-bit architecture for Windows
-          pyinstaller --onefile --name gcz-windows.exe --arch x86_64 main.py  # This is for the 64-bit Windows executable
-          pyinstaller --onefile --name gcz-linux main.py       # This is for the Linux executable
-
+          # Run PyInstaller to build the Linux executable
+          pyinstaller --onefile --name gcz-linux main.py
+          
           # Create a dist directory to store the executables
           mkdir -p dist
-
-          # Move the generated executables to the dist directory
-          [ -f "dist/gcz-windows.exe" ] && mv dist/gcz-windows.exe dist/ || echo "⚠️ gcz-windows.exe not generated."
+          
+          # Move the generated executable to the dist directory
           [ -f "dist/gcz-linux" ] && mv dist/gcz-linux dist/ || echo "⚠️ gcz-linux not generated."
+
+  # Job to build the Windows executable
+  build-windows:
+    runs-on: windows-latest  # Use Windows for building the Windows executable
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Set dynamic tag
+        id: set_tag
+        run: echo "TAG_NAME=v$(date +'%Y%m%d-%H%M')" >> $GITHUB_ENV
+
+      - name: Build Windows executable
+        run: |
+          # Run PyInstaller to build the Windows executable
+          pyinstaller --onefile --name gcz-windows.exe main.py
+          
+          # Create a dist directory to store the executables
+          mkdir -p dist
+          
+          # Move the generated executable to the dist directory
+          [ -f "dist/gcz-windows.exe" ] && mv dist/gcz-windows.exe dist/ || echo "⚠️ gcz-windows.exe not generated."
+
+  # Job to create the GitHub release with both Linux and Windows executables
+  release:
+    runs-on: ubuntu-latest  # Can run on Ubuntu or Windows (as it's mainly for release tasks)
+
+    needs: [build-linux, build-windows]  # Ensure this job runs after both build jobs
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.TAG_NAME }}  # Usa el tag dinámico
+          tag_name: ${{ env.TAG_NAME }}  # Use the dynamic tag
           name: "Release ${{ env.TAG_NAME }}"
           body: "🚀 New automatic release generated from main branch."
           files: |
