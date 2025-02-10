@@ -15,7 +15,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.10.7'  # Ensure it's a 64-bit version, but by default, recent Python versions are 64-bit.
 
       - name: Install dependencies
         run: |
@@ -28,11 +28,16 @@ jobs:
 
       - name: Build executables
         run: |
-          pyinstaller --onefile --name gcz-linux main.py
-          pyinstaller --onefile --name gcz-windows.exe main.py
+          # Run PyInstaller to build both executables with 64-bit architecture for Windows
+          pyinstaller --onefile --name gcz-windows.exe --arch x86_64 main.py  # This is for the 64-bit Windows executable
+          pyinstaller --onefile --name gcz-linux main.py       # This is for the Linux executable
+
+          # Create a dist directory to store the executables
           mkdir -p dist
-          [ -f "dist/gcz-linux" ] && mv dist/gcz-linux dist/ || echo "⚠️ gcz-linux no fue generado."
-          [ -f "dist/gcz-windows.exe" ] && mv dist/gcz-windows.exe dist/ || echo "⚠️ gcz-windows.exe no fue generado."
+
+          # Move the generated executables to the dist directory
+          [ -f "dist/gcz-windows.exe" ] && mv dist/gcz-windows.exe dist/ || echo "⚠️ gcz-windows.exe not generated."
+          [ -f "dist/gcz-linux" ] && mv dist/gcz-linux dist/ || echo "⚠️ gcz-linux not generated."
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
