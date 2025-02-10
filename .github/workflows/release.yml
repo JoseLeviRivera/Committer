@@ -31,8 +31,8 @@ jobs:
           pyinstaller --onefile --name gcz-linux main.py
           pyinstaller --onefile --name gcz-windows.exe main.py
           mkdir -p dist
-          mv gcz-linux dist/
-          mv gcz-windows.exe dist/
+          [ -f "dist/gcz-linux" ] && mv dist/gcz-linux dist/ || echo "⚠️ gcz-linux no fue generado."
+          [ -f "dist/gcz-windows.exe" ] && mv dist/gcz-windows.exe dist/ || echo "⚠️ gcz-windows.exe no fue generado."
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
