@@ -1,0 +1,61 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v1.0.1"  # Se ejecuta solo cuando creas un tag como v1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pyinstaller
+
+      - name: Build Windows executable
+        run: pyinstaller --onefile --name gcz-windows main.py
+        if: matrix.os == 'windows-latest'
+
+      - name: Build Linux executable
+        run: pyinstaller --onefile --name gcz-linux main.py
+        if: matrix.os == 'ubuntu-latest'
+
+      - name: Build macOS executable
+        run: pyinstaller --onefile --name gcz-macos main.py
+        if: matrix.os == 'macos-latest'
+
+      - name: Upload binaries as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcz-binaries
+          path: dist/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: gcz-binaries
+          path: dist/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          body: "🚀 New release with latest binaries!"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
